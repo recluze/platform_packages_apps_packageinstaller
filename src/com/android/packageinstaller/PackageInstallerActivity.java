@@ -39,6 +39,7 @@ import android.widget.AppSecurityPermissions;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
+import java.util.ArrayList;
 /*
  * This activity is launched when a new application is installed via side loading
  * The package is first parsed and the user is notified of parse errors via a dialog.
@@ -64,6 +65,7 @@ public class PackageInstallerActivity extends Activity implements OnCancelListen
     // Buttons to indicate user acceptance
     private Button mOk;
     private Button mCancel;
+    private Button mSetPermissions;
 
     // Dialog identifiers used in showDialog
     private static final int DLG_BASE = 0;
@@ -91,8 +93,10 @@ public class PackageInstallerActivity extends Activity implements OnCancelListen
         mInstallConfirm.setVisibility(View.VISIBLE);
         mOk = (Button)findViewById(R.id.ok_button);
         mCancel = (Button)findViewById(R.id.cancel_button);
+        mSetPermissions = (Button)findViewById(R.id.set_permissions_button);
         mOk.setOnClickListener(this);
         mCancel.setOnClickListener(this);
+        mSetPermissions.setOnClickListener(this);
     }
 
     private void showDialogInner(int id) {
@@ -288,6 +292,18 @@ public class PackageInstallerActivity extends Activity implements OnCancelListen
         } else if(v == mCancel) {
             // Cancel and finish
             finish();
+        } else if(v == mSetPermissions){
+            Log.d("APEX:PackageManager", "Calling SetApexPermissions activity for setting permissions.");
+            Intent intent = new Intent("android.intent.apex.action.SETPERMISSIONS");
+            intent.addCategory(Intent.CATEGORY_DEFAULT);   
+        
+            ArrayList<String> al = new ArrayList<String>();
+            intent.putStringArrayListExtra("permsArrayList", al);
+            intent.putExtra("packageName", mPkgInfo.packageName);
+        	
+            for(String permName: mPkgInfo.requestedPermissions)
+                al.add(permName);
+            startActivity(intent);            
         }
     }
 }

@@ -51,6 +51,14 @@
             android:layout_height="wrap_content"
             android:layout_marginRight = "2dip"
             android:orientation="vertical">
+            <Button
+          	android:id="@+id/set_permissions_button"
+            	android:text="@string/set_permissions"
+            	android:layout_width="fill_parent"
+            	android:paddingLeft="6dip"
+            	android:layout_gravity="left"
+            	android:layout_weight="0.4"
+            	android:layout_height="wrap_content"/>
             <TextView
                 android:id="@+id/security_settings_desc"
                 android:text="@string/security_settings_desc"
