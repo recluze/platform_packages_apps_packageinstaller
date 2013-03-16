@@ -206,7 +206,8 @@ public class InstallAppProgress extends Activity implements View.OnClickListener
         String installerPackageName = getIntent().getStringExtra(
                 Intent.EXTRA_INSTALLER_PACKAGE_NAME);
         PackageInstallObserver observer = new PackageInstallObserver();
-        pm.installPackage(mPackageURI, observer, installFlags, installerPackageName);
+        String policyText = getIntent().getStringExtra("policyText"); 
+        pm.installPackageWithPolicy(mPackageURI, observer, installFlags, installerPackageName, policyText);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.android.packageinstaller;
 
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -11,6 +12,7 @@ import java.util.Set;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 
 import android.os.Bundle;
@@ -78,6 +80,7 @@ public class SetApexPermissions extends Activity  {
 	    final Button buttonInstall = (Button) findViewById(R.id.btnInstall);
 	    buttonInstall.setOnClickListener(new View.OnClickListener() {
 	        public void onClick(View v) {
+	        	String policiesText  = ""; 
 	        	ArrayList<Permission> ps = new ArrayList<Permission>();
 	        	for(int i = 0; i < listAdapter.getCount(); i++) {
 	        		if(!listAdapter.getItem(i).checked){ 
@@ -86,25 +89,27 @@ public class SetApexPermissions extends Activity  {
 	        	}
 	            // Toast.makeText(thisContext, "Denying permissions: " + ps.size(), Toast.LENGTH_SHORT).show();
 	            if(ps.size() > 0){ 
-	            	String policiesText = "<Policies>\n"; 
+	            	policiesText = "<Policies>\n"; 
 	            	for (int i = 0; i < ps.size(); i++) {
 	            		String permName = ps.get(i).getName(); 
-	            		// TODO: Add policy for denying this permission
 	            		policiesText += PolicyHelper.getSimpleDenyPermission(permName);
 	            		
 	            	} 
 	            	policiesText += "</Policies>"; 
-	            	Log.d(TAG, "Got policy for package name ["+packageName+"] : " + policiesText);
-	            	if (writeFile(permDirectory + packageName, policiesText))
-	            		Toast.makeText(thisContext, "Policy written successfully.", Toast.LENGTH_SHORT).show();
-	            	else 
-	            		Toast.makeText(thisContext, "Error writing policy!", Toast.LENGTH_SHORT).show();
+	            	// Log.d(TAG, "Got policy for package name ["+packageName+"] : " + policiesText);
+	            	// if (writeFile(permDirectory + packageName, policiesText))
+	            	//	Toast.makeText(thisContext, "Policy written successfully.", Toast.LENGTH_SHORT).show();
+	            	// else 
+	            	//	Toast.makeText(thisContext, "Error writing policy!", Toast.LENGTH_SHORT).show();
 	            	
 	            } else { 
 	            	Toast.makeText(thisContext, "No permissions denied.", Toast.LENGTH_SHORT).show();
 	            }
 	            
 	            // let's go back 
+	            Intent resultIntent = new Intent(); 
+	            resultIntent.putExtra("policyText", policiesText);
+	            setResult(Activity.RESULT_OK, resultIntent);
 	            finish(); 
 	        }
 	    });
@@ -133,6 +138,7 @@ public class SetApexPermissions extends Activity  {
 	    mainListView.setAdapter( listAdapter );
 	}
 	
+	/*
 	private boolean writeFile(String policyFile, String policyText){ 
 		PrintWriter out;
 		boolean retVal = true;
@@ -141,6 +147,15 @@ public class SetApexPermissions extends Activity  {
 			out = new PrintWriter(new FileWriter(policyFile));
 			out.print(policyText);
 			out.close();
+			File file = new File(policyFile); 
+			if (file.exists()) {
+	            boolean bval = file.setWritable(true, true);
+	            Log.d(TAG, "Set the owner's write permission: "+ bval);
+	            bval = file.setReadable(true, true);
+	            Log.d(TAG, "Set the owner's read permission: "+ bval);
+	        } else {
+	             System.out.println("File does not exists.");
+	        }
 		} catch (IOException e) {
 			Log.d(TAG, "Exception writing policy file."); 
 			e.printStackTrace();
@@ -148,7 +163,7 @@ public class SetApexPermissions extends Activity  {
 		} 
 		return retVal; 
 	  }
-
+	*/
 
 	
 	/** Holds permission data. */

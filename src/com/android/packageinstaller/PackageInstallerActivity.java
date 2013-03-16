@@ -56,6 +56,9 @@ public class PackageInstallerActivity extends Activity implements OnCancelListen
     private boolean localLOGV = false;
     PackageManager mPm;
     private PackageParser.Package mPkgInfo;
+    
+    static int SET_PERMISSION_CODE = 1;
+    private String policyText = ""; 
 
     // ApplicationInfo object primarily used for already existing applications
     private ApplicationInfo mAppInfo = null;
@@ -286,7 +289,9 @@ public class PackageInstallerActivity extends Activity implements OnCancelListen
             if (installerPackageName != null) {
                 newIntent.putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, installerPackageName);
             }
+            newIntent.putExtra("policyText", this.policyText);
             if(localLOGV) Log.i(TAG, "downloaded app uri="+mPackageURI);
+            Log.d("APEX:PackageInstaller", "Starting installation inten with action: " + newIntent.getAction());
             startActivity(newIntent);
             finish();
         } else if(v == mCancel) {
@@ -303,7 +308,19 @@ public class PackageInstallerActivity extends Activity implements OnCancelListen
         	
             for(String permName: mPkgInfo.requestedPermissions)
                 al.add(permName);
-            startActivity(intent);            
+            
+            startActivityForResult(intent, SET_PERMISSION_CODE);            
         }
     }
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == SET_PERMISSION_CODE) { 
+			this.policyText = mPkgInfo.packageName + ":" + data.getStringExtra("policyText");		
+			Log.d("APEX:PackageManager", "Reveived policy text in main installer: " + this.policyText);
+		}
+		super.onActivityResult(requestCode, resultCode, data);
+	}
+    
+    
 }
