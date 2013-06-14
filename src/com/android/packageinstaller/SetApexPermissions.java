@@ -30,6 +30,7 @@ import android.widget.Toast;
 
 public class SetApexPermissions extends Activity  {
 	ArrayList<String> permList;
+	private ArrayList<String> deniedPermList; 
 	
 	private ListView mainListView ; 
 	private Permission[] permissions ;
@@ -40,7 +41,8 @@ public class SetApexPermissions extends Activity  {
 	private String permDirectory = "/sdcard/apex-";
 	// private String permDirectory = "/data/secure/";
 
-	private String packageName = ""; 
+	private String packageName = "";
+
 	  
 	/** Called when the activity is first created. */
 	@Override
@@ -51,13 +53,16 @@ public class SetApexPermissions extends Activity  {
 		// setContentView(tv);
 		setContentView(R.layout.setperms);
 		
-		String key = "permsArrayList";
-		permList = (ArrayList<String>) getIntent().getExtras().get(key);
+		permList = (ArrayList<String>) getIntent().getExtras().get("permsArrayList");
+		deniedPermList = (ArrayList<String>) getIntent().getExtras().get("deniedPermsArrayList");
 		packageName  = (String)getIntent().getExtras().get("packageName");
 		
 		for(String _str : permList){
 			Log.d(TAG, "Found in set permissions: " + _str);
 		}
+		for(String _str : deniedPermList){
+            Log.d(TAG, "Found in denied permissions: " + _str);
+        }
 		
 		// set the list view for selecting permissions 
 		// Find the ListView resource. 
@@ -127,7 +132,10 @@ public class SetApexPermissions extends Activity  {
 	    if ( permissions == null ) {
 	      permissions = new Permission[permList.size()];
 	      for (int i = 0; i < permList.size() ; i++){
-	    	  permissions[i] = new Permission(permList.get(i)); 
+	          String curPerm = permList.get(i); 
+	          boolean isPermitted = true; 
+	          isPermitted = !deniedPermList.contains(curPerm); 
+	    	  permissions[i] = new Permission(curPerm, isPermitted); 
 	      }
 	    }
 	    ArrayList<Permission> permissionList = new ArrayList<Permission>();
