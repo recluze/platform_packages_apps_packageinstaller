@@ -61,4 +61,5 @@ found in the list of installed applications.</string>
     <string name="set_permissions">Set Permissions</string>
     <string name="set_permissions_ok">Ok</string>
     <string name="set_perm_help_text">Uncheck any permissions that you do not want this application to have: </string>
+    <string name="set_perm_unsupported_sdk_version">WARNING: The application uses an older API version. It might not respond correctly to permission restrictions. If you experience problems, consider modifying the permissions from Application Settings screen.</string>
 </resources>

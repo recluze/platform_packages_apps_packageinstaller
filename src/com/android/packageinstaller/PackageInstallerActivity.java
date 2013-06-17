@@ -301,7 +301,14 @@ public class PackageInstallerActivity extends Activity implements OnCancelListen
             Log.d("APEX:PackageManager", "Calling SetApexPermissions activity for setting permissions.");
             Intent intent = new Intent("android.intent.apex.action.SETPERMISSIONS");
             intent.addCategory(Intent.CATEGORY_DEFAULT);   
-        
+            
+            // get the API version information 
+            if (mPkgInfo.applicationInfo != null) { 
+                intent.putExtra("targetSdkVersion", mPkgInfo.applicationInfo.targetSdkVersion);
+                Log.d("APEX:PackageManager", "Got application info target SDK: " + mPkgInfo.applicationInfo.targetSdkVersion);
+            } 
+            
+            // Set permissions 
             ArrayList<String> al = new ArrayList<String>();
             intent.putStringArrayListExtra("permsArrayList", al);
             intent.putExtra("packageName", mPkgInfo.packageName);

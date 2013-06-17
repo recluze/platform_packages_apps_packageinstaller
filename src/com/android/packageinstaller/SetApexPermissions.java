@@ -7,13 +7,16 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -24,6 +27,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -31,6 +35,8 @@ import android.widget.Toast;
 public class SetApexPermissions extends Activity  {
 	ArrayList<String> permList;
 	private ArrayList<String> deniedPermList; 
+	
+	private static Map<String, PermissionDetails> pMap = new HashMap<String, PermissionDetails>(); 
 	
 	private ListView mainListView ; 
 	private Permission[] permissions ;
@@ -42,6 +48,12 @@ public class SetApexPermissions extends Activity  {
 	// private String permDirectory = "/data/secure/";
 
 	private String packageName = "";
+    private int targetSdkVersion;
+    
+    // Permission levels 
+    private final static int PERM_CRITICAL = 2;
+    private final static int PERM_SENSITIVE = 1; 
+    private final static int PERM_NORMAL = 0;
 
 	  
 	/** Called when the activity is first created. */
@@ -53,9 +65,12 @@ public class SetApexPermissions extends Activity  {
 		// setContentView(tv);
 		setContentView(R.layout.setperms);
 		
+		pMap = PermissionDetails.getPermissionDetailsDefalut(); 
+		
 		permList = (ArrayList<String>) getIntent().getExtras().get("permsArrayList");
 		deniedPermList = (ArrayList<String>) getIntent().getExtras().get("deniedPermsArrayList");
 		packageName  = (String)getIntent().getExtras().get("packageName");
+		// targetSdkVersion = (Integer)getIntent().getExtras().get("targetSdkVersion");
 		
 		for(String _str : permList){
 			Log.d(TAG, "Found in set permissions: " + _str);
@@ -123,6 +138,8 @@ public class SetApexPermissions extends Activity  {
 	    buttonCancel.setOnClickListener(new View.OnClickListener() {
 	        public void onClick(View v) {
 	            Toast.makeText(thisContext, "No permissions were set.", Toast.LENGTH_SHORT).show();
+	            Intent resultIntent = new Intent(); 
+	            setResult(Activity.RESULT_CANCELED, resultIntent);
 	            finish();
 	        }
 	    });
@@ -216,10 +233,15 @@ public class SetApexPermissions extends Activity  {
 	  private static class PermissionViewHolder {
 	    private CheckBox checkBox ;
 	    private TextView textView ;
+        private ImageView icon;
+        private TextView descBox;
+        
 	    public PermissionViewHolder() {}
-	    public PermissionViewHolder( TextView textView, CheckBox checkBox ) {
+	    public PermissionViewHolder( TextView textView, CheckBox checkBox, ImageView icon, TextView descBox) {
 	      this.checkBox = checkBox ;
 	      this.textView = textView ;
+	      this.icon = icon;
+	      this.descBox = descBox; 
 	    }
 	    public CheckBox getCheckBox() {
 	      return checkBox;
@@ -232,7 +254,19 @@ public class SetApexPermissions extends Activity  {
 	    }
 	    public void setTextView(TextView textView) {
 	      this.textView = textView;
-	    }    
+	    }
+	    public ImageView getIcon() {
+	        return icon;
+	    }
+	    public void setIcon(ImageView icon) {
+	        this.icon = icon;
+	    }
+	    public void setDescBox(TextView descBox) { 
+	        this.descBox = descBox;
+	    }
+        public TextView getDescBox() {
+            return descBox; 
+        }
 	  }
 	  
 	  /** Custom adapter for displaying an array of Permission objects. */
@@ -252,8 +286,10 @@ public class SetApexPermissions extends Activity  {
 	      Permission permission = (Permission) this.getItem( position ); 
 
 	      // The child views in each row.
-	      CheckBox checkBox ; 
-	      TextView textView ; 
+	      CheckBox checkBox; 
+	      TextView textView; 
+	      ImageView icon;
+	      TextView descBox; 
 	      
 	      // Create a new row view
 	      if ( convertView == null ) {
@@ -262,10 +298,12 @@ public class SetApexPermissions extends Activity  {
 	        // Find the child views.
 	        textView = (TextView) convertView.findViewById( R.id.rowTextView );
 	        checkBox = (CheckBox) convertView.findViewById( R.id.CheckBox01 );
+	        icon = (ImageView) convertView.findViewById(R.id.perm_sensitivity); 
+	        descBox = (TextView) convertView.findViewById(R.id.rowPermDesc);
 	        
 	        // Optimization: Tag the row with it's child views, so we don't have to 
 	        // call findViewById() later when we reuse the row.
-	        convertView.setTag( new PermissionViewHolder(textView,checkBox) );
+	        convertView.setTag( new PermissionViewHolder(textView,checkBox, icon, descBox) );
 
 	        // If CheckBox is toggled, update the permission it is tagged with.
 	        checkBox.setOnClickListener( new View.OnClickListener() {
@@ -282,6 +320,8 @@ public class SetApexPermissions extends Activity  {
 	        PermissionViewHolder viewHolder = (PermissionViewHolder) convertView.getTag();
 	        checkBox = viewHolder.getCheckBox() ;
 	        textView = viewHolder.getTextView() ;
+	        icon = viewHolder.getIcon();
+	        descBox = viewHolder.getDescBox(); 
 	      }
 
 	      // Tag the CheckBox with the Permission it is displaying, so that we can
@@ -292,6 +332,16 @@ public class SetApexPermissions extends Activity  {
 	      checkBox.setChecked( permission.isChecked() );
 	      textView.setText( permission.getFriendlyName() );      
 	      
+	      // Set the permission icon 
+	       
+	      if (PolicyHelper.getPermissionSensitivity(permission.getName()) == PERM_CRITICAL) 
+	          icon.setImageDrawable(getContext().getResources().getDrawable(R.drawable.exclamation));
+	      else if (PolicyHelper.getPermissionSensitivity(permission.getName()) == PERM_SENSITIVE) 
+              icon.setImageDrawable(getContext().getResources().getDrawable(R.drawable.error));
+	      else 
+	          icon.setImageDrawable(getContext().getResources().getDrawable(R.drawable.button_indicator_finish));
+	      
+	      descBox.setText(PolicyHelper.getPermissionDesc(permission.getName())); 
 	      return convertView;
 	    }
 	    
@@ -309,5 +359,38 @@ public class SetApexPermissions extends Activity  {
 					+ "  </Policy> " + "\n";
 			return policy; 
 		  }
+		  private static int getPermissionSensitivity(String permName) {
+		      if(pMap.get(permName) != null) 
+		          return pMap.get(permName).sensitivity;
+		      
+		      else return PERM_NORMAL;
+		  }
+		  private static String getPermissionDesc(String permName) { 
+		      if(pMap.get(permName) != null)
+		          return pMap.get(permName).desc; 
+		      else 
+		          return "";
+		  }
 	  }
+}
+
+class PermissionDetails { 
+    public int sensitivity; 
+    public String desc;
+    
+    public PermissionDetails(int sensitivity, String desc) { 
+        this.sensitivity = sensitivity; 
+        this.desc = desc; 
+    }
+    
+    public static HashMap<String, PermissionDetails> getPermissionDetailsDefalut() { 
+        HashMap<String, PermissionDetails> pMap = new HashMap<String, PermissionDetails>();
+        
+        pMap.put("android.permission.ACCESS_COARSE_LOCATION", 
+                new PermissionDetails(1, "Allows the app to access approximate location through wireless network"));
+        pMap.put("android.permission.CALL_PHONE", 
+                new PermissionDetails(2, "Allows the app to initiate a phone call without going through the Dialer"));
+        
+        return pMap;
+    }
 }
